@@ -5,7 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>测试页</title>
+    <title>LCD数字显示 - 基于绝对定位实现</title>
     <style>
         *{margin: 0; padding:0;}
         html, body{width: 100%; height: 100%}
@@ -37,7 +37,7 @@
     </style>
 </head>
 <body>
-    <div class="number-group">
+    <div class="number-group" id="group">
         <div class="number-wpt">
             <div class="number-item"></div>
             <div class="number-item"></div>
@@ -66,7 +66,6 @@
             <div class="number-item"></div>
         </div>
     </div>
-<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
 <script type="text/javascript">
     var numberGroup = [
         [1, 2, 3, 4, 5, 6],
@@ -80,8 +79,8 @@
         [1, 2, 3, 4, 5, 6, 7],
         [1, 2, 3, 6, 7]
     ];
-
     var index = 0;
+    var lastValue = [];
 
     function toNum(num, length) {
         var newNum = num.toString();
@@ -91,16 +90,43 @@
         return newNum;
     }
 
+    function toggleActive (ele, active) {
+    	var classArr = ele.className.split(" ");
+    	if (active) {
+    		if (classArr.indexOf("active") < 0) {
+    			classArr.push("active")
+    			ele.className = classArr.join(" ");
+    		}
+    	} else {
+    		if (classArr.indexOf("active") >= 0) {
+    			classArr.splice(classArr.indexOf("active"), 1);
+    			ele.className = classArr.join(" ");
+    		}
+    	}
+    }
+    
     function showNumber() {
-        index %= 1000;
-        $(".number-item").removeClass("active");
+    	var i = 0, j = 0, numArr, value, ele;
 
-        var value = toNum(index, 3);
-        value.split("").map(function(n, i){
-            numberGroup[n].map(function(item) {
-                $(".number-wpt").eq(i).find(".number-item").eq(item - 1).addClass("active");
-            });
-        });
+        index %= 1000;
+        value = toNum(index, 3).split('');
+
+        for (; i<value.length; i++) {
+        	// bit differs
+        	if (value[i] !== lastValue[i]) {
+        		numArr = numberGroup[value[i]];
+        		for (j = 0; j < numberGroup[8].length; j++) {
+        			var ele = document.getElementById("group").children[i].children[j];
+        			if (numArr.indexOf(numberGroup[8][j]) >= 0) {
+        				toggleActive(ele, true);
+        			} else {
+        				toggleActive(ele, false);
+        			}
+        		}
+        	}
+        }
+
+        lastValue = value;
         index ++;
         setTimeout(showNumber, 1000);
     }
