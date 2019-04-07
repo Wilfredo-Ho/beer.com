@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Canvas | Clock</title>
+    <style>
+        html, body, #canvas { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas">Your browserdoes not support the canvas element!</canvas>
+    <script>
+        var c = document.getElementById('canvas');
+        var W = c.width = window.innerWidth;
+        var H = c.height = window.innerHeight;
+        var sideLength = Math.min(W, H) / 2;
+        var ctx = c.getContext('2d');
+
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, W, H);
+
+        function numToCh (num) {
+            var arr = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+            var t_int = Math.floor(num / 10);
+            var t_int_ch = t_int === 0 ? ''
+                        : ( t_int === 1 ? '' : arr[t_int]) + '十';
+            return  t_int_ch + ((num % 10 === 0 && t_int > 0) ? '' : arr[num % 10]);    // 避免 十零 这种情况
+        }
+
+        /*
+        * 获取日期数组
+        * @params(String)|1 [default = year, month, day, week, HH, mm, ss]
+        * @return (Array || String(2019))
+        */
+        function getDate(datetype) {
+            var start, end, unit = '', pre_unit = '';
+            switch(datetype){
+                case 'month': 
+                    start = 1;
+                    end = 12;
+                    unit = '月';
+                    break;
+                case 'day': 
+                    start = 1;
+                    end = 31;
+                    unit = '号';
+                    break;
+                case 'week':
+                    start = 1;
+                    end = 7;
+                    pre_unit = '星期';
+                    break;
+                case 'HH':
+                    unit = '点';
+                    start = 0;
+                    end = 23;
+                    break;
+                case 'mm':
+                    start = 0;
+                    end = 59;
+                    unit = '分';
+                    break;
+                case 'ss':
+                    start = 0;
+                    end = 59;
+                    unit = '秒';
+                    break;
+                default: 
+                    return new Date().getFullYear();
+            }
+            var arr = [];
+            for (var i = start; i<=end; i++) {
+                arr.push(pre_unit + numToCh(i) + unit);
+            }
+            if (datetype === 'week') {
+                arr.pop();
+                arr.unshift("星期日");
+            };
+            return arr;
+        }
+
+        // 计算每次每个圆的旋转角
+        function calculateAngle (type, len) {
+        	var now = new Date();
+            var m = now.getMonth() + 1,
+                d = now.getDate(),
+                w = now.getDay() + 1,
+                h = now.getHours(),
+                min = now.getMinutes(),
+                s = now.getSeconds(),
+                ms = now.getMilliseconds();
+            var current = 0;
+            var angle = 0;
+            
+            switch(type) {
+                case 'ss': current = s + 1; break;
+                case 'mm': current = min + 1; break;
+                case 'HH': current = h + 1; break;
+                case 'week': current = w; break;
+                case 'day': current = d; break;
+                case 'month': current = m; break;
+                default: current = 0; 
+            }
+
+            if (type === 'ss') {
+                angle = -( ms * 0.006 + s * 6 - 3) / 180 * Math.PI;
+            } else {
+                angle = -(current-1) / len * Math.PI * 2
+            }
+
+            return {
+                current: current,
+                angle: angle
+            };
+        }
+
+        /*
+        * 绘制圆环文字
+        * @params(String)|1 [year, month, day, week, HH, mm, ss]
+        * @return (Array || String(2019))
+        */
+        function drawCircle(datetype) {
+        	var level = ['year', 'month', 'day', 'week', 'HH', 'mm', 'ss'].indexOf(datetype);
+            var textArr = getDate(datetype);
+            var len = Array.isArray(textArr) ? textArr.length : 1;
+            var radius = sideLength * 0.9 * level / 7;
+            var obj = calculateAngle(datetype, len);
+
+            var x, y;
+            ctx.fillStyle = '#fff';
+            ctx.font =  sideLength * 2 * 0.012 + 'px sans-serif';
+            ctx.save();
+            ctx.translate( W/2, H /2);
+            ctx.rotate(obj['angle']);	
+            for (var i = 0; i < len ; i++) {
+                x = radius * Math.cos( i / len * Math.PI * 2);
+                y = radius *  Math.sin( i / len * Math.PI * 2);
+                ctx.save();
+                if (i+1 === obj['current']) {
+                    ctx.fillStyle = 'red';
+                }
+                ctx.translate(x, y);
+                ctx.rotate( -((len - i) / len) * Math.PI * 2);
+                ctx.fillText(textArr[i] || textArr,  0, 0);
+                ctx.restore();
+            }
+            ctx.restore();
+        }
+
+        var frame = null;
+
+        function draw () {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0,0, W, H);
+            drawCircle('year');
+            drawCircle('month');
+            drawCircle('day');
+            drawCircle('week');
+            drawCircle('HH');
+            drawCircle('mm');
+            drawCircle('ss');
+
+            frame = requestAnimationFrame(draw);
+        }
+
+        draw();
+
+        window.onresize = function () {
+            window.cancelAnimationFrame(frame);
+            W = c.width = window.innerWidth;
+            H = c.height = window.innerHeight;
+            sideLength = Math.min(W, H) / 2;
+            draw();
+        }
+    </script>
+</body>
+</html>
