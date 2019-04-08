@@ -129,7 +129,7 @@
             var obj = calculateAngle(datetype, len);
 
             var x, y;
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = '#999';
             ctx.font =  sideLength * 2 * 0.012 + 'px sans-serif';
             ctx.save();
             ctx.translate( W/2, H /2);
@@ -139,7 +139,7 @@
                 y = radius *  Math.sin( i / len * Math.PI * 2);
                 ctx.save();
                 if (i+1 === obj['current']) {
-                    ctx.fillStyle = 'red';
+                    ctx.fillStyle = '#fff';
                 }
                 ctx.translate(x, y);
                 ctx.rotate( -((len - i) / len) * Math.PI * 2);
